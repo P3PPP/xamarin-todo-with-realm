@@ -30,7 +30,7 @@ namespace Todo
 			}
 		}
 
-		public int ResumeAtTodoId { get; set; }
+		public string ResumeAtTodoId { get; set; }
 
 		protected override void OnStart()
 		{
@@ -44,9 +44,9 @@ namespace Todo
 				Debug.WriteLine ("   rati="+rati);
 				if (!String.IsNullOrEmpty (rati)) {
 					Debug.WriteLine ("   rati = " + rati);
-					ResumeAtTodoId = int.Parse (rati);
+					ResumeAtTodoId = rati;
 
-					if (ResumeAtTodoId >= 0) {
+					if (!string.IsNullOrEmpty(ResumeAtTodoId)) {
 						var todoPage = new TodoItemPageX ();
 						todoPage.BindingContext = Database.GetItem (ResumeAtTodoId);
 

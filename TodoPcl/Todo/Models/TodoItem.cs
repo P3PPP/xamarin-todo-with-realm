@@ -1,16 +1,12 @@
 ﻿using System;
-using SQLite;
+using Realms;
 
 namespace Todo
 {
-	public class TodoItem
+	public class TodoItem : RealmObject
 	{
-		public TodoItem ()
-		{
-		}
-
-		[PrimaryKey, AutoIncrement]
-		public int ID { get; set; }
+		[ObjectId]
+		public string ID { get; set; }
 		public string Name { get; set; }
 		public string Notes { get; set; }
 		public bool Done { get; set; }

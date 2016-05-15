@@ -71,13 +71,19 @@ namespace Todo
         {
             base.OnAppearing();
             // reset the 'resume' id, since we just want to re-start here
-            ((App)App.Current).ResumeAtTodoId = -1;
+			((App)App.Current).ResumeAtTodoId = null;
             listView.ItemsSource = App.Database.GetItems();
         }
 
         void listItemSelected(object sender, SelectedItemChangedEventArgs e)
         {
-            var todoItem = (TodoItem)e.SelectedItem;
+			var selectedItem = (TodoItem)e.SelectedItem;
+			var todoItem = new TodoItem {
+				ID = selectedItem.ID,
+				Done = selectedItem.Done,
+				Name = selectedItem.Name,
+				Notes = selectedItem.Notes,
+			};
             var todoPage = new TodoItemPageX();
             todoPage.BindingContext = todoItem;
 

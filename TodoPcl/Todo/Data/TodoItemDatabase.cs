@@ -1,69 +1,73 @@
 ﻿using System;
-using SQLite;
 using System.Collections.Generic;
 using System.Linq;
-using Xamarin.Forms;
+using Realms;
 
 namespace Todo
 {
-	public class TodoItemDatabase 
+	public class TodoItemDatabase
 	{
-		static object locker = new object ();
+		Realm realm;
 
-		SQLiteConnection database;
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="Tasky.DL.TaskDatabase"/> TaskDatabase. 
-		/// if the database doesn't exist, it will create the database and all the tables.
-		/// </summary>
-		/// <param name='path'>
-		/// Path.
-		/// </param>
 		public TodoItemDatabase()
 		{
-			database = DependencyService.Get<ISQLite> ().GetConnection ();
-			// create the tables
-			database.CreateTable<TodoItem>();
+			realm = Realm.GetInstance();
 		}
 
-		public IEnumerable<TodoItem> GetItems ()
+		public IEnumerable<TodoItem> GetItems()
 		{
-			lock (locker) {
-				return (from i in database.Table<TodoItem>() select i).ToList();
-			}
+			return realm.All<TodoItem>().ToList();
 		}
 
-		public IEnumerable<TodoItem> GetItemsNotDone ()
+		public IEnumerable<TodoItem> GetItemsNotDone()
 		{
-			lock (locker) {
-				return database.Query<TodoItem>("SELECT * FROM [TodoItem] WHERE [Done] = 0");
-			}
+			return realm.All<TodoItem>().Where(x => x.Done == false).ToList();
 		}
 
-		public TodoItem GetItem (int id) 
+		public TodoItem GetItem(string id)
 		{
-			lock (locker) {
-				return database.Table<TodoItem>().FirstOrDefault(x => x.ID == id);
-			}
+			return realm.All<TodoItem>()
+				        .ToList()
+				        .FirstOrDefault(x => x.ID == id);
 		}
 
-		public int SaveItem (TodoItem item) 
+		public string SaveItem(TodoItem item)
 		{
-			lock (locker) {
-				if (item.ID != 0) {
-					database.Update(item);
-					return item.ID;
-				} else {
-					return database.Insert(item);
+			var newItem = realm.All<TodoItem>()
+							 .ToList()
+							 .FirstOrDefault(x => x.ID == item.ID);
+
+			using (var trans = realm.BeginWrite()) {
+				if (newItem == null) {
+					newItem = realm.CreateObject<TodoItem>();
+					newItem.ID = Guid.NewGuid().ToString();
 				}
+
+				newItem.Name = item.Name;
+				newItem.Notes = item.Notes;
+				newItem.Done = item.Done;
+
+				trans.Commit();
 			}
+
+			return newItem?.ID;
 		}
 
-		public int DeleteItem(int id)
+		public string DeleteItem(string id)
 		{
-			lock (locker) {
-				return database.Delete<TodoItem>(id);
+			var item = realm.All<TodoItem>()
+							 .ToList()
+							 .FirstOrDefault(x => x.ID == id);
+
+			if (item == null)
+				return null;
+
+			using (var trans = realm.BeginWrite()) {
+				realm.Remove(item);
+				trans.Commit();
 			}
+
+			return id;
 		}
 	}
 }
